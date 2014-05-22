@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 	"text/template"
 )
 
@@ -29,7 +30,8 @@ func (t *Template) Execute() error {
 	funcMap := template.FuncMap{
 		"env": os.Getenv,
 	}
-	tmpl := template.Must(template.New(t.Src).Funcs(funcMap).ParseFiles(t.Src))
+	name := filepath.Base(t.Src)
+	tmpl := template.Must(template.New(name).Funcs(funcMap).ParseFiles(t.Src))
 
 	dst, err := os.Create(t.Dst)
 	if err != nil {
