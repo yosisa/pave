@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/codegangsta/cli"
 	"os"
 )
@@ -18,6 +19,8 @@ func main() {
 
 func realMain(c *cli.Context) {
 	for _, f := range c.StringSlice("file") {
-		println(NewTemplate(f).Execute())
+		if err := NewTemplate(f).Execute(); err != nil {
+			fmt.Println(err)
+		}
 	}
 }
