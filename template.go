@@ -28,7 +28,7 @@ func (t *Template) Execute() error {
 	}
 
 	funcMap := template.FuncMap{
-		"env": os.Getenv,
+		"env": Getenv,
 	}
 	name := filepath.Base(t.Src)
 	tmpl := template.Must(template.New(name).Funcs(funcMap).ParseFiles(t.Src))
@@ -42,4 +42,12 @@ func (t *Template) Execute() error {
 	tmpl.Execute(dst, "")
 
 	return nil
+}
+
+func Getenv(name string, defaults ...string) string {
+	s := os.Getenv(name)
+	if s == "" && len(defaults) > 0 {
+		s = defaults[0]
+	}
+	return s
 }
