@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -9,8 +10,9 @@ import (
 const suffix = ".tpl"
 
 type Template struct {
-	Src string
-	Dst string
+	Src  string
+	Dst  string
+	tmpl *template.Template
 }
 
 func NewTemplate(path string) *Template {
@@ -27,13 +29,11 @@ func (t *Template) Execute() error {
 		}
 	}
 
-	funcMap := template.FuncMap{
-		"env":  Getenv,
-		"ipv4": IPv4,
-		"ipv6": IPv6,
+	b, err := ioutil.ReadFile(t.Src)
+	if err != nil {
+		return err
 	}
-	name := filepath.Base(t.Src)
-	tmpl := template.Must(template.New(name).Funcs(funcMap).ParseFiles(t.Src))
+	t.parse(string(b))
 
 	dst, err := os.Create(t.Dst)
 	if err != nil {
@@ -41,9 +41,20 @@ func (t *Template) Execute() error {
 	}
 	defer dst.Close()
 
-	tmpl.Execute(dst, "")
+	t.tmpl.Execute(dst, "")
 
 	return nil
+}
+
+func (t *Template) parse(text string) {
+	funcMap := template.FuncMap{
+		"env":  Getenv,
+		"ipv4": IPv4,
+		"ipv6": IPv6,
+	}
+
+	name := filepath.Base(t.Src)
+	t.tmpl = template.Must(template.New(name).Funcs(funcMap).Parse(text))
 }
 
 func Getenv(name string, defaults ...string) string {
