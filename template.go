@@ -28,7 +28,9 @@ func (t *Template) Execute() error {
 	}
 
 	funcMap := template.FuncMap{
-		"env": Getenv,
+		"env":  Getenv,
+		"ipv4": IPv4,
+		"ipv6": IPv6,
 	}
 	name := filepath.Base(t.Src)
 	tmpl := template.Must(template.New(name).Funcs(funcMap).ParseFiles(t.Src))
