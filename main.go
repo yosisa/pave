@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/codegangsta/cli"
 	"os"
+	"os/exec"
 )
 
 func main() {
@@ -11,6 +12,7 @@ func main() {
 	app.Name = "pave"
 	app.Flags = []cli.Flag{
 		cli.StringSliceFlag{"file, f", &cli.StringSlice{}, "description"},
+		cli.StringFlag{"command, c", "", "description"},
 	}
 	app.Action = realMain
 
@@ -22,5 +24,12 @@ func realMain(c *cli.Context) {
 		if err := NewTemplate(f).Execute(); err != nil {
 			fmt.Println(err)
 		}
+	}
+
+	if command := c.String("command"); command != "" {
+		runCommand(command, prepareFunc(func(cmd *exec.Cmd) {
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+		}))
 	}
 }
