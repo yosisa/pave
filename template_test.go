@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -57,10 +56,7 @@ func TestIP(t *testing.T) {
 	}
 	ipv4, ipv6 = append(ipv4, ""), append(ipv6, "")
 
-	w := new(bytes.Buffer)
 	ifname := nics[0].Name
-	tmpl := NewTemplate("")
-	tmpl.parse(fmt.Sprintf(`{{ipv4 "%s"}}, {{ipv6 "%s"}}`, ifname, ifname))
-	tmpl.tmpl.Execute(w, "")
-	assert.Equal(t, fmt.Sprintf("%s, %s", ipv4[0], ipv6[0]), w.String())
+	r := Render("", fmt.Sprintf(`{{ipv4 "%s"}}, {{ipv6 "%s"}}`, ifname, ifname))
+	assert.Equal(t, fmt.Sprintf("%s, %s", ipv4[0], ipv6[0]), r)
 }

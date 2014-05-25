@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -33,28 +34,26 @@ func (t *Template) Execute() error {
 	if err != nil {
 		return err
 	}
-	t.parse(string(b))
 
-	dst, err := os.Create(t.Dst)
-	if err != nil {
-		return err
-	}
-	defer dst.Close()
+	name := filepath.Base(t.Src)
+	text := Render(name, string(b))
 
-	t.tmpl.Execute(dst, "")
-
-	return nil
+	err = ioutil.WriteFile(t.Dst, []byte(text), 0644)
+	return err
 }
 
-func (t *Template) parse(text string) {
+func Render(name, text string) string {
 	funcMap := template.FuncMap{
 		"env":  Getenv,
 		"ipv4": IPv4,
 		"ipv6": IPv6,
 	}
 
-	name := filepath.Base(t.Src)
-	t.tmpl = template.Must(template.New(name).Funcs(funcMap).Parse(text))
+	tmpl := template.Must(template.New(name).Funcs(funcMap).Parse(text))
+
+	w := new(bytes.Buffer)
+	tmpl.Execute(w, "")
+	return w.String()
 }
 
 func Getenv(name string, defaults ...string) string {
