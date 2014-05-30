@@ -5,6 +5,7 @@ import (
 	"github.com/codegangsta/cli"
 	"os"
 	"os/exec"
+	"sync"
 )
 
 func main() {
@@ -12,7 +13,7 @@ func main() {
 	app.Name = "pave"
 	app.Flags = []cli.Flag{
 		cli.StringSliceFlag{"file, f", &cli.StringSlice{}, "description"},
-		cli.StringFlag{"command, c", "", "description"},
+		cli.StringSliceFlag{"command, c", &cli.StringSlice{}, "description"},
 	}
 	app.Action = realMain
 
@@ -26,10 +27,17 @@ func realMain(c *cli.Context) {
 		}
 	}
 
-	if command := c.String("command"); command != "" {
-		runCommand(command, prepareFunc(func(cmd *exec.Cmd) {
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-		}))
+	var wg sync.WaitGroup
+	for _, command := range c.StringSlice("command") {
+		wg.Add(1)
+		go func(command string) {
+			runCommand(command, prepareFunc(func(cmd *exec.Cmd) {
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stderr
+			}))
+			wg.Done()
+		}(command)
 	}
+
+	wg.Wait()
 }
