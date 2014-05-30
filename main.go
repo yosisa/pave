@@ -12,8 +12,8 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "pave"
 	app.Flags = []cli.Flag{
-		cli.StringSliceFlag{"file, f", &cli.StringSlice{}, "description"},
-		cli.StringSliceFlag{"command, c", &cli.StringSlice{}, "description"},
+		cli.StringSliceFlag{"file, f", &cli.StringSlice{}, "files to be rendered"},
+		cli.StringSliceFlag{"command, c", &cli.StringSlice{}, "commands to be executed"},
 	}
 	app.Action = realMain
 
