@@ -2,33 +2,31 @@ package main
 
 import (
 	"fmt"
-	"github.com/codegangsta/cli"
+	"github.com/jessevdk/go-flags"
 	"os"
 	"os/exec"
 	"sync"
 )
 
-func main() {
-	app := cli.NewApp()
-	app.Name = "pave"
-	app.Flags = []cli.Flag{
-		cli.StringSliceFlag{"file, f", &cli.StringSlice{}, "files to be rendered"},
-		cli.StringSliceFlag{"command, c", &cli.StringSlice{}, "commands to be executed"},
-	}
-	app.Action = realMain
-
-	app.Run(os.Args)
+var opts struct {
+	Files    []string `short:"f" long:"file" description:"Files to be rendered"`
+	Commands []string `short:"c" long:"command" description:"Commands to be executed"`
 }
 
-func realMain(c *cli.Context) {
-	for _, f := range c.StringSlice("file") {
+func main() {
+	_, err := flags.Parse(&opts)
+	if err != nil {
+		os.Exit(1)
+	}
+
+	for _, f := range opts.Files {
 		if err := NewTemplate(f).Execute(); err != nil {
 			fmt.Println(err)
 		}
 	}
 
 	var wg sync.WaitGroup
-	for _, command := range c.StringSlice("command") {
+	for _, command := range opts.Commands {
 		wg.Add(1)
 		go func(command string) {
 			runCommand(command, prepareFunc(func(cmd *exec.Cmd) {
