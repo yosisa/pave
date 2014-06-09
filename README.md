@@ -1,5 +1,5 @@
 # pave
-[![Build Status](https://drone.io/github.com/yosisa/pave/status.png)](https://drone.io/github.com/yosisa/pave/latest)
+[![Build Status](https://drone.io/github.com/yosisa/pave/status.png)](https://drone.io/github.com/yosisa/pave/latest) [![Coverage Status](https://coveralls.io/repos/yosisa/pave/badge.png?branch=master)](https://coveralls.io/r/yosisa/pave?branch=master)
 
 ## License
 The MIT License (MIT)
