@@ -2,15 +2,18 @@ package main
 
 import (
 	"fmt"
-	"github.com/jessevdk/go-flags"
 	"os"
 	"os/exec"
-	"sync"
+	"time"
+
+	"github.com/jessevdk/go-flags"
 )
 
 var opts struct {
-	Files    []string `short:"f" long:"file" description:"Files to be rendered"`
-	Commands []string `short:"c" long:"command" description:"Commands to be executed"`
+	Files       []string        `short:"f" long:"file" description:"Files to be rendered"`
+	Commands    []string        `short:"c" long:"command" description:"Commands to be executed"`
+	Strategy    RestartStrategy `short:"r" long:"restart" description:"Restart strategy (none|always|error)"`
+	RestartWait time.Duration   `short:"w" long:"restart-wait" description:"Duration for restarting"`
 }
 
 func main() {
@@ -25,17 +28,16 @@ func main() {
 		}
 	}
 
-	var wg sync.WaitGroup
-	for _, command := range opts.Commands {
-		wg.Add(1)
-		go func(command string) {
-			runCommand(command, prepareFunc(func(cmd *exec.Cmd) {
+	if len(opts.Commands) > 0 {
+		pm := NewProcessManager(opts.Strategy, opts.RestartWait)
+		for _, command := range opts.Commands {
+			cmd := NewCommand(command)
+			cmd.PrepareFunc = func(cmd *exec.Cmd) {
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
-			}))
-			wg.Done()
-		}(command)
+			}
+			pm.Add(cmd)
+		}
+		pm.Run()
 	}
-
-	wg.Wait()
 }

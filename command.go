@@ -1,28 +1,36 @@
 package main
 
 import (
-	"github.com/gonuts/go-shlex"
 	"os/exec"
+
+	"github.com/gonuts/go-shlex"
 )
 
-type runner interface {
-	Run(*exec.Cmd) error
+type Command struct {
+	Template    string
+	PrepareFunc func(*exec.Cmd)
+	Cmd         *exec.Cmd
 }
 
-type prepareFunc func(*exec.Cmd)
-
-func (f prepareFunc) Run(cmd *exec.Cmd) error {
-	f(cmd)
-	return cmd.Run()
+func NewCommand(cmd string) *Command {
+	return &Command{Template: cmd}
 }
 
-func runCommand(text string, r runner) error {
-	command := Render("", text)
+func (c *Command) Start() error {
+	command := Render("", c.Template)
 	args, err := shlex.Split(command)
 	if err != nil {
-		return nil
+		return err
 	}
 
-	cmd := exec.Command(args[0], args[1:]...)
-	return r.Run(cmd)
+	c.Cmd = exec.Command(args[0], args[1:]...)
+	if c.PrepareFunc != nil {
+		c.PrepareFunc(c.Cmd)
+	}
+
+	return c.Cmd.Start()
+}
+
+func (c *Command) Wait() error {
+	return c.Cmd.Wait()
 }
