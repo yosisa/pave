@@ -72,9 +72,13 @@ func (m *ProcessManager) Add(cmd *Command) {
 }
 
 func (m *ProcessManager) Start() {
+	// Increment the counter to avoid 0 active processes and abnormal exiting during start-up.
+	// It's occurred due to super short running command.
+	atomic.AddInt32(&m.numActives, 1)
 	for _, p := range m.processes {
 		m.startProcess(p)
 	}
+	m.maybeDone()
 }
 
 func (m *ProcessManager) Wait() {
@@ -101,6 +105,8 @@ func (m *ProcessManager) startProcess(p *Process) {
 }
 
 func (m *ProcessManager) sentinel(p *Process) {
+	defer m.maybeDone()
+
 	err := p.Cmd.Wait()
 	if err != nil {
 		p.SetError(err)
@@ -113,7 +119,9 @@ func (m *ProcessManager) sentinel(p *Process) {
 			m.startProcess(p)
 		}
 	}
+}
 
+func (m *ProcessManager) maybeDone() {
 	if atomic.AddInt32(&m.numActives, -1) == 0 {
 		close(m.doneCh)
 	}
