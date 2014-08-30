@@ -5,28 +5,31 @@ import (
 	"strings"
 )
 
-func IPv4(key string) string {
-	return findIP(key, true)
+func IPv4(keys ...string) string {
+	return findIP(keys, true)
 }
 
-func IPv6(key string) string {
-	return findIP(key, false)
+func IPv6(keys ...string) string {
+	return findIP(keys, false)
 }
 
-func findIP(key string, prefer4 bool) string {
-	if nic, err := net.InterfaceByName(key); err == nil {
-		addrs, err := nic.Addrs()
-		if ips := filterByVersion(addrs, err, prefer4); len(ips) > 0 {
-			return ips[0]
+func findIP(keys []string, prefer4 bool) string {
+	for _, key := range keys {
+		if nic, err := net.InterfaceByName(key); err == nil {
+			addrs, err := nic.Addrs()
+			if ips := filterByVersion(addrs, err, prefer4); len(ips) > 0 {
+				return ips[0]
+			}
 		}
-		return ""
 	}
 
 	addrs, err := net.InterfaceAddrs()
 	ips := filterByVersion(addrs, err, prefer4)
 	for _, ip := range ips {
-		if strings.HasPrefix(ip, key) {
-			return ip
+		for _, key := range keys {
+			if strings.HasPrefix(ip, key) {
+				return ip
+			}
 		}
 	}
 

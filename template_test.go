@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var testText = `{{env "USER"}}
@@ -59,4 +60,7 @@ func TestIP(t *testing.T) {
 	ifname := nics[0].Name
 	r := Render("", fmt.Sprintf(`{{ipv4 "%s"}}, {{ipv6 "%s"}}`, ifname, ifname))
 	assert.Equal(t, fmt.Sprintf("%s, %s", ipv4[0], ipv6[0]), r)
+
+	r = Render("", `{{ipv4 "ethX" "lo" "lo0" "127"}}`)
+	assert.Equal(t, "127.0.0.1", r)
 }
