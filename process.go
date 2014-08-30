@@ -2,7 +2,10 @@ package main
 
 import (
 	"errors"
+	"os"
+	"os/signal"
 	"sync/atomic"
+	"syscall"
 	"time"
 )
 
@@ -55,15 +58,26 @@ type ProcessManager struct {
 	numActives  int32
 	doneCh      chan bool
 	stopCh      chan bool
+	sigCh       chan os.Signal
 }
 
 func NewProcessManager(strategy RestartStrategy, restartWait time.Duration) *ProcessManager {
-	return &ProcessManager{
+	m := &ProcessManager{
 		Strategy:    strategy,
 		RestartWait: restartWait,
 		doneCh:      make(chan bool, 1),
 		stopCh:      make(chan bool, 1),
+		sigCh:       make(chan os.Signal, 1),
 	}
+
+	signal.Notify(m.sigCh, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		for sig := range m.sigCh {
+			m.SignalAll(sig)
+		}
+	}()
+
+	return m
 }
 
 func (m *ProcessManager) Add(cmd *Command) {
@@ -83,6 +97,8 @@ func (m *ProcessManager) Start() {
 
 func (m *ProcessManager) Wait() {
 	<-m.doneCh
+	signal.Stop(m.sigCh)
+	close(m.sigCh)
 }
 
 func (m *ProcessManager) Run() {
@@ -124,5 +140,11 @@ func (m *ProcessManager) sentinel(p *Process) {
 func (m *ProcessManager) maybeDone() {
 	if atomic.AddInt32(&m.numActives, -1) == 0 {
 		close(m.doneCh)
+	}
+}
+
+func (m *ProcessManager) SignalAll(sig os.Signal) {
+	for _, p := range m.processes {
+		p.Cmd.Process.Signal(sig)
 	}
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"os/exec"
+	"syscall"
 	"testing"
 	"time"
 
@@ -63,4 +64,19 @@ func TestProcessManagerWithRestartAlways(t *testing.T) {
 	pm.Wait()
 	assert.Equal(t, "foofoo", b1.String())
 	assert.Equal(t, "barbar", b2.String())
+}
+
+func TestProcessManagerSignal(t *testing.T) {
+	b1 := new(bytes.Buffer)
+	pm := NewProcessManager(StrategyNoRestart, 0)
+
+	cmd := NewCommand(`sleep 1`)
+	cmd.PrepareFunc = func(cmd *exec.Cmd) { cmd.Stdout = b1 }
+	pm.Add(cmd)
+
+	start := time.Now()
+	pm.Start()
+	pm.SignalAll(syscall.SIGTERM)
+	pm.Wait()
+	assert.True(t, time.Since(start).Seconds() < 0.1)
 }
