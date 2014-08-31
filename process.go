@@ -70,10 +70,15 @@ func NewProcessManager(strategy RestartStrategy, restartWait time.Duration) *Pro
 		sigCh:       make(chan os.Signal, 1),
 	}
 
-	signal.Notify(m.sigCh, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(m.sigCh, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	go func() {
 		for sig := range m.sigCh {
-			m.SignalAll(sig)
+			switch sig {
+			case syscall.SIGINT, syscall.SIGTERM:
+				m.Stop()
+			default:
+				m.SignalAll(sig)
+			}
 		}
 	}()
 
@@ -108,6 +113,12 @@ func (m *ProcessManager) Run() {
 
 func (m *ProcessManager) Stop() {
 	close(m.stopCh)
+	m.SignalAll(syscall.SIGTERM)
+	select {
+	case <-m.doneCh:
+	case <-time.After(10 * time.Second):
+		m.SignalAll(syscall.SIGKILL)
+	}
 }
 
 func (m *ProcessManager) startProcess(p *Process) {
