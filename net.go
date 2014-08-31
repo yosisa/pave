@@ -14,25 +14,23 @@ func IPv6(keys ...string) string {
 }
 
 func findIP(keys []string, prefer4 bool) string {
+	addrs, err := net.InterfaceAddrs()
+	ips := filterByVersion(addrs, err, prefer4)
+
 	for _, key := range keys {
 		if nic, err := net.InterfaceByName(key); err == nil {
 			addrs, err := nic.Addrs()
 			if ips := filterByVersion(addrs, err, prefer4); len(ips) > 0 {
 				return ips[0]
 			}
-		}
-	}
-
-	addrs, err := net.InterfaceAddrs()
-	ips := filterByVersion(addrs, err, prefer4)
-	for _, ip := range ips {
-		for _, key := range keys {
-			if strings.HasPrefix(ip, key) {
-				return ip
+		} else {
+			for _, ip := range ips {
+				if strings.HasPrefix(ip, key) {
+					return ip
+				}
 			}
 		}
 	}
-
 	return ""
 }
 
