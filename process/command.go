@@ -1,9 +1,10 @@
-package main
+package process
 
 import (
 	"os/exec"
 
 	"github.com/gonuts/go-shlex"
+	"github.com/yosisa/pave/template"
 )
 
 type Command struct {
@@ -17,7 +18,7 @@ func NewCommand(cmd string) *Command {
 }
 
 func (c *Command) Start() error {
-	command := Render("", c.Template)
+	command := template.Render("", c.Template)
 	args, err := shlex.Split(command)
 	if err != nil {
 		return err
