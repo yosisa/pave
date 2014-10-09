@@ -33,12 +33,10 @@ func main() {
 	if len(opts.Commands) > 0 {
 		pm := process.NewProcessManager(opts.Strategy, opts.RestartWait)
 		for _, command := range opts.Commands {
-			cmd := process.NewCommand(command)
-			cmd.PrepareFunc = func(cmd *exec.Cmd) {
+			pm.Add(process.New(command, func(cmd *exec.Cmd) {
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
-			}
-			pm.Add(cmd)
+			}, nil))
 		}
 		pm.Run()
 	}

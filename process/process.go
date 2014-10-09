@@ -3,6 +3,7 @@ package process
 import (
 	"errors"
 	"os"
+	"os/exec"
 	"os/signal"
 	"sync/atomic"
 	"syscall"
@@ -40,15 +41,28 @@ func (s *RestartStrategy) UnmarshalFlag(v string) error {
 
 type Process struct {
 	*Command
-	Error     error
-	State     ProcessState
-	StoppedAt time.Time
+	Error      error
+	State      ProcessState
+	StoppedAt  time.Time
+	errHandler func(error)
+}
+
+func New(cmd string, prepareFn func(*exec.Cmd), errHandler func(error)) *Process {
+	command := NewCommand(cmd)
+	command.PrepareFunc = prepareFn
+	return &Process{
+		Command:    command,
+		errHandler: errHandler,
+	}
 }
 
 func (p *Process) SetError(err error) {
 	p.State = StateError
 	p.Error = err
 	p.StoppedAt = time.Now()
+	if p.errHandler != nil {
+		p.errHandler(err)
+	}
 }
 
 type ProcessManager struct {
@@ -85,8 +99,7 @@ func NewProcessManager(strategy RestartStrategy, restartWait time.Duration) *Pro
 	return m
 }
 
-func (m *ProcessManager) Add(cmd *Command) {
-	p := &Process{Command: cmd}
+func (m *ProcessManager) Add(p *Process) {
 	m.processes = append(m.processes, p)
 }
 

@@ -29,14 +29,8 @@ func TestProcessManager(t *testing.T) {
 	b2 := new(bytes.Buffer)
 	pm := NewProcessManager(StrategyNoRestart, 0)
 
-	cmd := NewCommand(`echo -n foo`)
-	cmd.PrepareFunc = func(cmd *exec.Cmd) { cmd.Stdout = b1 }
-	pm.Add(cmd)
-
-	cmd = NewCommand(`echo -n bar`)
-	cmd.PrepareFunc = func(cmd *exec.Cmd) { cmd.Stdout = b2 }
-	pm.Add(cmd)
-
+	pm.Add(New(`echo -n foo`, func(cmd *exec.Cmd) { cmd.Stdout = b1 }, nil))
+	pm.Add(New(`echo -n bar`, func(cmd *exec.Cmd) { cmd.Stdout = b2 }, nil))
 	pm.Run()
 	assert.Equal(t, "foo", b1.String())
 	assert.Equal(t, "bar", b2.String())
@@ -47,14 +41,8 @@ func TestProcessManagerWithRestartAlways(t *testing.T) {
 	b2 := new(bytes.Buffer)
 	pm := NewProcessManager(StrategyRestartAlways, 100*time.Millisecond)
 
-	cmd := NewCommand(`echo -n foo`)
-	cmd.PrepareFunc = func(cmd *exec.Cmd) { cmd.Stdout = b1 }
-	pm.Add(cmd)
-
-	cmd = NewCommand(`echo -n bar`)
-	cmd.PrepareFunc = func(cmd *exec.Cmd) { cmd.Stdout = b2 }
-	pm.Add(cmd)
-
+	pm.Add(New(`echo -n foo`, func(cmd *exec.Cmd) { cmd.Stdout = b1 }, nil))
+	pm.Add(New(`echo -n bar`, func(cmd *exec.Cmd) { cmd.Stdout = b2 }, nil))
 	pm.Start()
 	go func() {
 		<-time.After(150 * time.Millisecond)
@@ -69,10 +57,7 @@ func TestProcessManagerStop(t *testing.T) {
 	b1 := new(bytes.Buffer)
 	pm := NewProcessManager(StrategyNoRestart, 0)
 
-	cmd := NewCommand(`sleep 1`)
-	cmd.PrepareFunc = func(cmd *exec.Cmd) { cmd.Stdout = b1 }
-	pm.Add(cmd)
-
+	pm.Add(New(`sleep 1`, func(cmd *exec.Cmd) { cmd.Stdout = b1 }, nil))
 	start := time.Now()
 	pm.Start()
 	pm.Stop()
