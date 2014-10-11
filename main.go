@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/jessevdk/go-flags"
@@ -30,14 +32,32 @@ func main() {
 		}
 	}
 
-	if len(opts.Commands) > 0 {
-		pm := process.NewProcessManager(opts.Strategy, opts.RestartWait)
-		for _, command := range opts.Commands {
-			pm.Add(process.New(command, func(cmd *exec.Cmd) {
-				cmd.Stdout = os.Stdout
-				cmd.Stderr = os.Stderr
-			}, nil))
+	if len(opts.Commands) == 0 {
+		return
+	}
+
+	pm := process.NewProcessManager(opts.Strategy, opts.RestartWait)
+	for _, command := range opts.Commands {
+		pm.Add(process.New(command, func(cmd *exec.Cmd) {
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+		}, nil))
+	}
+	go signalHandler(pm)
+	pm.Run()
+}
+
+func signalHandler(pm *process.ProcessManager) {
+	sigC := make(chan os.Signal)
+	signal.Notify(sigC, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	for sig := range sigC {
+		switch sig {
+		case syscall.SIGINT, syscall.SIGTERM:
+			pm.Stop()
+			signal.Stop(sigC)
+			close(sigC)
+		default:
+			pm.SignalAll(sig)
 		}
-		pm.Run()
 	}
 }
