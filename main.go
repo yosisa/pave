@@ -44,6 +44,7 @@ func main() {
 		}, nil))
 	}
 	go signalHandler(pm)
+	go childCollector()
 	pm.Run()
 }
 
@@ -58,6 +59,17 @@ func signalHandler(pm *process.ProcessManager) {
 			close(sigC)
 		default:
 			pm.SignalAll(sig)
+		}
+	}
+}
+
+func childCollector() {
+	var ws syscall.WaitStatus
+	tick := time.Tick(10 * time.Second)
+	for _ = range tick {
+		var err error
+		for err == nil {
+			_, err = syscall.Wait4(-1, &ws, 0, nil)
 		}
 	}
 }
