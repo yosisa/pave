@@ -1,5 +1,5 @@
 # pave
-[![Build Status](https://drone.io/github.com/yosisa/pave/status.png)](https://drone.io/github.com/yosisa/pave/latest) [![Coverage Status](https://coveralls.io/repos/yosisa/pave/badge.png?branch=master)](https://coveralls.io/r/yosisa/pave?branch=master)
+[![wercker status](https://app.wercker.com/status/becb7f87df22bc3d75782a9291a4c629/s/master "wercker status")](https://app.wercker.com/project/bykey/becb7f87df22bc3d75782a9291a4c629) [![Coverage Status](https://coveralls.io/repos/yosisa/pave/badge.png?branch=master)](https://coveralls.io/r/yosisa/pave?branch=master)
 
 pave is a tiny program which provides process management and template rendering
 for configuration files before running processes. In addition to configuration
