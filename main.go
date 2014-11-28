@@ -20,6 +20,7 @@ var opts struct {
 	Commands    []string                `short:"c" long:"command" description:"Commands to be executed"`
 	Strategy    process.RestartStrategy `short:"r" long:"restart" description:"Restart strategy (none|always|error)"`
 	RestartWait time.Duration           `short:"w" long:"restart-wait" description:"Duration for restarting"`
+	Forever     bool                    `long:"forever" description:"Run forever even if no child process exists"`
 	Version     bool                    `long:"version" description:"Show version"`
 }
 
@@ -39,10 +40,6 @@ func main() {
 		}
 	}
 
-	if len(opts.Commands) == 0 {
-		return
-	}
-
 	pm := process.NewProcessManager(opts.Strategy, opts.RestartWait)
 	for _, command := range opts.Commands {
 		pm.Add(process.New(command, func(cmd *exec.Cmd) {
@@ -50,12 +47,17 @@ func main() {
 			cmd.Stderr = os.Stderr
 		}, nil))
 	}
-	go signalHandler(pm)
+
+	c := make(chan bool)
+	go signalHandler(pm, c)
 	go childCollector()
 	pm.Run()
+	if opts.Forever {
+		<-c
+	}
 }
 
-func signalHandler(pm *process.ProcessManager) {
+func signalHandler(pm *process.ProcessManager, c chan bool) {
 	sigC := make(chan os.Signal)
 	signal.Notify(sigC, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	for sig := range sigC {
@@ -64,6 +66,7 @@ func signalHandler(pm *process.ProcessManager) {
 			pm.Stop()
 			signal.Stop(sigC)
 			close(sigC)
+			close(c)
 		default:
 			pm.SignalAll(sig)
 		}
