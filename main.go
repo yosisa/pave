@@ -13,17 +13,24 @@ import (
 	"github.com/yosisa/pave/template"
 )
 
+var Version string
+
 var opts struct {
 	Files       []string                `short:"f" long:"file" description:"Files to be rendered"`
 	Commands    []string                `short:"c" long:"command" description:"Commands to be executed"`
 	Strategy    process.RestartStrategy `short:"r" long:"restart" description:"Restart strategy (none|always|error)"`
 	RestartWait time.Duration           `short:"w" long:"restart-wait" description:"Duration for restarting"`
+	Version     bool                    `long:"version" description:"Show version"`
 }
 
 func main() {
 	_, err := flags.Parse(&opts)
 	if err != nil {
 		os.Exit(1)
+	}
+	if opts.Version {
+		fmt.Println("pave", Version)
+		return
 	}
 
 	for _, f := range opts.Files {

@@ -17,7 +17,7 @@ build:
     - script:
         name: gox
         code: |
-          gox -os="linux darwin" -arch="amd64" -output "${WERCKER_OUTPUT_DIR}/pkg/pave_{{.OS}}_{{.Arch}}/{{.Dir}}"
+          gox -os="linux darwin" -arch="amd64" -ldflags="-X main.Version \"$(git describe --tags --always --dirty) ($(git name-rev --name-only HEAD))\"" -output "${WERCKER_OUTPUT_DIR}/pkg/pave_{{.OS}}_{{.Arch}}/{{.Dir}}"
     - tcnksm/zip:
         input: $WERCKER_OUTPUT_DIR/pkg
         output: $WERCKER_OUTPUT_DIR/dist
