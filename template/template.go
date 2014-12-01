@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 )
 
@@ -44,9 +45,10 @@ func (t *Template) Execute() error {
 
 func Render(name, text string) string {
 	funcMap := template.FuncMap{
-		"env":  Getenv,
-		"ipv4": IPv4,
-		"ipv6": IPv6,
+		"env":   Getenv,
+		"ipv4":  IPv4,
+		"ipv6":  IPv6,
+		"split": Split,
 	}
 
 	tmpl := template.Must(template.New(name).Funcs(funcMap).Parse(text))
@@ -62,4 +64,15 @@ func Getenv(name string, defaults ...string) string {
 		s = defaults[0]
 	}
 	return s
+}
+
+func Split(sep, s string) []string {
+	items := strings.Split(s, sep)
+	result := make([]string, 0, len(items))
+	for _, v := range items {
+		if val := strings.Trim(v, " "); val != "" {
+			result = append(result, val)
+		}
+	}
+	return result
 }

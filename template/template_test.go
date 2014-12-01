@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -63,4 +64,13 @@ func TestIP(t *testing.T) {
 
 	r = Render("", `{{ipv4 "ethX" "lo" "lo0" "127"}}`)
 	assert.Equal(t, "127.0.0.1", r)
+}
+
+func TestSplit(t *testing.T) {
+	tmpl := `{{range $i, $v := env "PATH" | split ":"}}{{if $i}}, {{end}}{{.}}{{end}}`
+	expect := strings.Replace(os.Getenv("PATH"), ":", ", ", -1)
+	assert.Equal(t, expect, Render("", tmpl))
+
+	tmpl = `{{range $v := "a,b,,c" | split ","}}{{.}}{{end}}`
+	assert.Equal(t, "abc", Render("", tmpl))
 }
