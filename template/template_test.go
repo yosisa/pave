@@ -74,3 +74,11 @@ func TestSplit(t *testing.T) {
 	tmpl = `{{range $v := "a,b,,c" | split ","}}{{.}}{{end}}`
 	assert.Equal(t, "abc", Render("", tmpl))
 }
+
+func TestDefault(t *testing.T) {
+	tmpl := `{{"no" | default "yes"}}`
+	assert.Equal(t, "no", Render("", tmpl))
+
+	tmpl = `{{"" | default "yes"}}`
+	assert.Equal(t, "yes", Render("", tmpl))
+}

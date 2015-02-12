@@ -45,10 +45,11 @@ func (t *Template) Execute() error {
 
 func Render(name, text string) string {
 	funcMap := template.FuncMap{
-		"env":   Getenv,
-		"ipv4":  IPv4,
-		"ipv6":  IPv6,
-		"split": Split,
+		"env":     Getenv,
+		"ipv4":    IPv4,
+		"ipv6":    IPv6,
+		"split":   Split,
+		"default": Default,
 	}
 
 	tmpl := template.Must(template.New(name).Funcs(funcMap).Parse(text))
@@ -75,4 +76,11 @@ func Split(sep, s string) []string {
 		}
 	}
 	return result
+}
+
+func Default(defaultVal, val string) string {
+	if val == "" {
+		return defaultVal
+	}
+	return val
 }
