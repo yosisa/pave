@@ -21,6 +21,15 @@ build:
     - tcnksm/zip:
         input: $WERCKER_OUTPUT_DIR/pkg
         output: $WERCKER_OUTPUT_DIR/dist
+    - script:
+        name: make tarball
+        code: |
+          mkdir -p $WERCKER_OUTPUT_DIR/dist
+          for target in $(find $WERCKER_OUTPUT_DIR/pkg -mindepth 1 -maxdepth 1 -type d); do pushd $target && tar czf $WERCKER_OUTPUT_DIR/dist/$(basename $target).tar.gz * && popd; done
+          pushd $WERCKER_OUTPUT_DIR/dist
+          shasum * > SHASUMS
+          popd
+          ls -l $WERCKER_OUTPUT_DIR/dist
 deploy:
   steps:
     - tcnksm/ghr:
