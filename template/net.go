@@ -49,3 +49,8 @@ func filterByVersion(addrs []net.Addr, err error, prefer4 bool) []string {
 
 	return ips
 }
+
+func init() {
+	funcmap["ipv4"] = IPv4
+	funcmap["ipv6"] = IPv6
+}

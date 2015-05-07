@@ -11,6 +11,12 @@ import (
 
 const suffix = ".tpl"
 
+var funcmap = template.FuncMap{
+	"env":     Getenv,
+	"split":   Split,
+	"default": Default,
+}
+
 type Template struct {
 	Src  string
 	Dst  string
@@ -44,16 +50,7 @@ func (t *Template) Execute() error {
 }
 
 func Render(name, text string) string {
-	funcMap := template.FuncMap{
-		"env":     Getenv,
-		"ipv4":    IPv4,
-		"ipv6":    IPv6,
-		"split":   Split,
-		"default": Default,
-	}
-
-	tmpl := template.Must(template.New(name).Funcs(funcMap).Parse(text))
-
+	tmpl := template.Must(template.New(name).Funcs(funcmap).Parse(text))
 	w := new(bytes.Buffer)
 	tmpl.Execute(w, "")
 	return w.String()

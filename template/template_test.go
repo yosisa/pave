@@ -82,3 +82,14 @@ func TestDefault(t *testing.T) {
 	tmpl = `{{"" | default "yes"}}`
 	assert.Equal(t, "yes", Render("", tmpl))
 }
+
+func TestMath(t *testing.T) {
+	assert.Equal(t, "3", Render("", "{{add 2 1}}"))
+	assert.Equal(t, "1", Render("", "{{sub 2 1}}"))
+	assert.Equal(t, "2", Render("", "{{mul 2 1}}"))
+	assert.Equal(t, "2", Render("", "{{div 4 2}}"))
+	assert.Equal(t, "3", Render("", "{{major 4}}"))
+	assert.Equal(t, "3", Render("", "{{major 5}}"))
+	assert.Equal(t, "2", Render("", "{{div 4 3 | ceil}}"))
+	assert.Equal(t, "1", Render("", "{{div 4 3 | floor}}"))
+}
