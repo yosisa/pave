@@ -3,7 +3,7 @@ package process
 import (
 	"os/exec"
 
-	"code.google.com/p/go-shlex"
+	"github.com/google/shlex"
 	"github.com/yosisa/pave/template"
 )
 
